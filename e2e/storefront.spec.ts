@@ -56,6 +56,28 @@ test.describe("storefront", () => {
     await expect(page.getByRole("button", { name: "Add to Cart" })).toBeEnabled();
   });
 
+  test("products search is debounced and only fetches once after typing", async ({ page }) => {
+    const requests: string[] = [];
+
+    page.on("request", (request) => {
+      if (/\/products\/\d+(\?.*)?$/.test(request.url())) {
+        requests.push(request.url());
+      }
+    });
+
+    await page.goto("/products");
+    await expectProductVisible(page);
+
+    const search = page.getByRole("searchbox", { name: "Search products" });
+    requests.length = 0;
+
+    await search.pressSequentially("raiden", { delay: 25 });
+
+    await expect(page).toHaveURL(/\/products\?q=raiden$/, { timeout: 2_000 });
+    await expect(search).toHaveValue("raiden");
+    await expect.poll(() => requests.length).toBe(1);
+  });
+
   test("products search bar updates the URL and can be cleared", async ({ page }) => {
     await page.goto("/products");
 
