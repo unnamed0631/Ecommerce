@@ -9,14 +9,9 @@ const Categories = () => (
     <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-20">
       <SectionHeading eyebrow="Explore the vault" title="Pick your figure flavour" />
 
-      <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {storeCategories.map((category, index) => (
-          <CategoryCard
-            key={category.name}
-            category={category}
-            featured={index === 0}
-            priority={index < 3}
-          />
+          <CategoryCard key={category.name} category={category} priority={index < 4} />
         ))}
       </div>
     </section>

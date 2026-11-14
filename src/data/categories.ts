@@ -51,7 +51,7 @@ export const storeCategories: readonly StoreCategory[] = [
     description: "1/7, 1/6 and 1/4 centrepiece figures with show-stopping sculpts and paintwork.",
     image: PRODUCT_IMAGES.prinzHeinrich,
     imageAlt: "Azur Lane Prinz Heinrich 1/7 scale figure",
-    badge: "Collector grails",
+    badge: "Collector",
     path: tagPath("Bishoujo Figures"),
   },
   {
@@ -59,7 +59,7 @@ export const storeCategories: readonly StoreCategory[] = [
     description: "Pocket-sized heroes, expressive faces and palm-perfect display companions.",
     image: PRODUCT_IMAGES.hinaSorasaki,
     imageAlt: "Nendoroid Blue Archive Hina Sorasaki",
-    badge: "Pocket-sized",
+    badge: "Small",
     path: tagPath("Chibi Figures"),
   },
   {
@@ -67,7 +67,7 @@ export const storeCategories: readonly StoreCategory[] = [
     description: "Fully poseable figures with swappable faces, hands and accessories.",
     image: PRODUCT_IMAGES.mikuNt,
     imageAlt: "figma Hatsune Miku NT",
-    badge: "Fully poseable",
+    badge: "Poseable",
     path: tagPath("figma"),
   },
   {
@@ -80,10 +80,10 @@ export const storeCategories: readonly StoreCategory[] = [
   },
   {
     name: "Hololive & VTubers",
-    description: "Virtual idols, streamer figures and merch from hololive and beyond.",
+    description: "Vtubers, streamer figures and merch from hololive and beyond.",
     image: PRODUCT_IMAGES.suisei,
     imageAlt: "Pop Up Parade SP Hoshimachi Suisei",
-    badge: "Virtual idols",
+    badge: "Vtubers",
     path: tagPath("Vtuber"),
   },
   {
@@ -91,7 +91,7 @@ export const storeCategories: readonly StoreCategory[] = [
     description: "Genshin Impact, Honkai, Zenless Zone Zero and other game collectibles.",
     image: PRODUCT_IMAGES.kafka,
     imageAlt: "Honkai: Star Rail Kafka 1/7 scale figure",
-    badge: "Game legends",
+    badge: "Video Game",
     path: tagPath("HoYoverse"),
   },
   {
@@ -99,7 +99,7 @@ export const storeCategories: readonly StoreCategory[] = [
     description: "Miku, Racing Miku and singing-synthesizer figures in every style.",
     image: PRODUCT_IMAGES.racingMiku,
     imageAlt: "Racing Miku 2024 1/7 scale figure",
-    badge: "Digital diva",
+    badge: "Vocaloid",
     path: tagPath("Hatsune Miku"),
   },
   {
@@ -107,7 +107,7 @@ export const storeCategories: readonly StoreCategory[] = [
     description: "Acrylic stands, keychains, display accessories and shelf-ready extras.",
     image: PRODUCT_IMAGES.robobot,
     imageAlt: "Nendoroid More Kirby Planet Robobot Robobot Armor",
-    badge: "Shelf extras",
+    badge: "Other",
     path: tagPath("Figure Accessories"),
   },
 ];

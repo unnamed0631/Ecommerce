@@ -30,7 +30,7 @@ const ProductPreviewImage = ({
     return (
       <div
         aria-hidden="true"
-        className={`${className} flex items-center justify-center bg-slate-800 text-slate-500`}
+        className={`${className} flex items-center justify-center bg-gray-100 text-gray-400`}
       >
         <ImageOff className="h-8 w-8" />
       </div>

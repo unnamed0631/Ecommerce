@@ -23,12 +23,12 @@ const HERO_CARD_LAYOUTS = [
   {
     wrapper:
       "absolute right-0 top-0 w-[82%] rotate-1 overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-xl",
-    image: "h-56 w-full object-cover",
+    image: "h-60 w-full object-cover",
   },
   {
     wrapper:
       "absolute bottom-0 left-0 w-[74%] -rotate-1 overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-lg",
-    image: "h-44 w-full object-cover",
+    image: "h-54 w-full object-cover",
   },
 ] as const;
 
@@ -73,8 +73,8 @@ const CategoryHero = () => (
 
         {/* Product showcase */}
         <div className="relative mx-auto hidden h-107.5 w-full max-w-md lg:block">
-          {heroShowcase.map((feature, index) => {
-            const layout = HERO_CARD_LAYOUTS[index];
+          {heroShowcase.map((feature, i) => {
+            const layout = HERO_CARD_LAYOUTS[i];
 
             return (
               <div key={feature.title} className={layout.wrapper}>
@@ -85,11 +85,11 @@ const CategoryHero = () => (
                     loading="eager"
                     className={layout.image}
                   />
-                  <div className="absolute left-3 top-3 rounded-2xl border border-gray-200 bg-white px-3 py-2 shadow-sm">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary">
+                  <div className="absolute left-3 top-3 rounded-2xl bg-black/40 backdrop-blur px-3 py-2 shadow-sm">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white">
+                      {/*badge*/}
                       {feature.eyebrow}
                     </p>
-                    <p className="text-sm font-bold text-gray-900">{feature.title}</p>
                   </div>
                 </div>
               </div>

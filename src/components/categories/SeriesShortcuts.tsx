@@ -6,7 +6,7 @@ import SectionHeading from "@/components/ui/SectionHeading";
 const SeriesShortcuts = () => (
   <section className="border-y border-slate-200 bg-white py-14 lg:py-16">
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <SectionHeading title="Browse by series" />
+      <SectionHeading eyebrow="Fandom first" title="Browse by series" />
 
       <div className="mt-8 flex flex-wrap gap-3">
         {figureSeries.map((series) => (

@@ -29,7 +29,8 @@ const BUYING_TIPS: readonly BuyingTip[] = [
 const BuyingGuide = () => (
   <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-20">
     <SectionHeading
-      title="New to the site?"
+      eyebrow="Collector's corner"
+      title="New to figure collecting?"
       description="Three quick things to know before your first pre-order."
       variant="stacked"
     />
