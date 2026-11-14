@@ -7,7 +7,6 @@ import {
   Home,
   LayoutGrid,
   LogOut,
-  Mail,
   Package,
   ShieldCheck,
   ShoppingCart,
@@ -45,12 +44,6 @@ const NAV_ITEMS: readonly NavigationItem[] = [
     to: "/categories",
     Icon: LayoutGrid,
     isActive: (pathname) => pathname.startsWith("/categories"),
-  },
-  {
-    label: "Contact",
-    to: "/contact",
-    Icon: Mail,
-    isActive: (pathname) => pathname.startsWith("/contact"),
   },
 ];
 

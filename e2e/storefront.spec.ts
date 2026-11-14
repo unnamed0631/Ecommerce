@@ -31,11 +31,33 @@ test.describe("storefront", () => {
 
     await page.getByRole("link", { name: "Categories", exact: true }).first().click();
     await expect(page).toHaveURL(/\/categories$/);
-    await expectPageHeading(page, "Shop by Category");
+    await expectPageHeading(page, "Anime Figure Categories");
+  });
 
-    await page.getByRole("link", { name: "Contact", exact: true }).first().click();
-    await expect(page).toHaveURL(/\/contact$/);
-    await expectPageHeading(page, "Contact us");
+  test("contact page and navigation links are removed", async ({ page }) => {
+    await page.goto("/");
+
+    await expect(page.getByRole("link", { name: "Contact", exact: true })).toHaveCount(0);
+
+    await page.goto("/contact");
+    await expectPageHeading(page, "Page not found");
+  });
+
+  test("category cards filter the catalog and the filter can be cleared", async ({ page }) => {
+    await page.goto("/categories");
+
+    const category = page.getByRole("link", { name: /Scale & Bishoujo Figures/ }).first();
+
+    await expect(category.locator("img")).toHaveAttribute("src", /resize\.cdn\.otakumode\.com/);
+
+    await category.click();
+
+    await expect(page).toHaveURL(/\/products\?tags=Bishoujo%20Figures$/);
+    await expect(page.getByText("Category: Bishoujo Figures")).toBeVisible();
+
+    await page.getByRole("button", { name: "Clear category filter" }).click();
+    await expect(page).toHaveURL(/\/products$/);
+    await expect(page.getByText(/^Category:/)).toHaveCount(0);
   });
 
   test("unknown routes show the 404 page", async ({ page }) => {

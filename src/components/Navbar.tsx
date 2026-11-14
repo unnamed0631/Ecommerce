@@ -120,7 +120,6 @@ const Navbar = () => {
             <StyledLink to="/">Home</StyledLink>
             <StyledLink to="/products">Products</StyledLink>
             <StyledLink to="/categories">Categories</StyledLink>
-            <StyledLink to="/contact">Contact</StyledLink>
             <Search />
           </div>
 

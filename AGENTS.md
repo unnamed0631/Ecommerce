@@ -205,7 +205,8 @@ is a working alias of `/products/:page` (query `page` instead of the path segmen
 - [x] PayPal idempotency, replay, amount verification, retry state machine.
 - [x] Real profile page: overview, settings, addresses, order history.
 - [x] Legacy `combine ts with main later/` files integrated and removed.
-- [x] Contact and 404 pages; `/contact` route.
+- [x] Contact page/route removed; 404 page handles unknown routes.
+- [x] Anime-figure Categories page with tag-filtered category cards and series shortcuts.
 - [x] JWT auth persistence and server error messages in forms.
 - [x] Redis graceful fallback.
 - [x] Playwright E2E suite with mocked APIs.

@@ -9,7 +9,7 @@ import {
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Pagination } from "@/components";
 import { ProductCardSkeleton } from "@/components/ui/skeletons";
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { ProductsContext } from "@/context/ProductsContext";
 import { Searchbar, SideSearchBar, ProductGridCard } from "@/components/products";
 
@@ -19,6 +19,7 @@ const Product = () => {
   const [searchParams] = useSearchParams();
   const searchQuery = searchParams.get("q")?.trim() ?? "";
   const sortParam = searchParams.get("sort")?.trim() ?? "";
+  const tagsParam = searchParams.get("tags")?.trim() ?? "";
   const [filters, setFilters] = useState<Record<string, string>>({});
 
   const {
@@ -38,9 +39,10 @@ const Product = () => {
 
     if (searchQuery) params.q = searchQuery;
     if (sortParam) params.sort = sortParam;
+    if (tagsParam) params.tags = tagsParam;
 
     void loadProducts(currentPage, params);
-  }, [currentPage, loadProducts, searchQuery, sortParam]);
+  }, [currentPage, loadProducts, searchQuery, sortParam, tagsParam]);
 
   const handleSortChange = useCallback(
     (sort: string) => {
@@ -74,10 +76,15 @@ const Product = () => {
 
       // Navigating to the same URL does not retrigger the data effect.
       if (trimmed && trimmed === searchQuery && currentPage === 1) {
-        void loadProducts(1, sortParam ? { q: trimmed, sort: sortParam } : { q: trimmed });
+        const replay: Record<string, string> = { q: trimmed };
+
+        if (sortParam) replay.sort = sortParam;
+        if (tagsParam) replay.tags = tagsParam;
+
+        void loadProducts(1, replay);
       }
     },
-    [currentPage, loadProducts, navigate, searchParams, searchQuery, sortParam],
+    [currentPage, loadProducts, navigate, searchParams, searchQuery, sortParam, tagsParam],
   );
 
   const handleClear = useCallback(() => {
@@ -86,6 +93,16 @@ const Product = () => {
     if (!params.has("q")) return;
 
     params.delete("q");
+    const queryString = params.toString();
+    void navigate(queryString ? `/products?${queryString}` : "/products", { replace: true });
+  }, [navigate, searchParams]);
+
+  const handleClearTags = useCallback(() => {
+    const params = new URLSearchParams(searchParams);
+
+    if (!params.has("tags")) return;
+
+    params.delete("tags");
     const queryString = params.toString();
     void navigate(queryString ? `/products?${queryString}` : "/products", { replace: true });
   }, [navigate, searchParams]);
@@ -123,6 +140,22 @@ const Product = () => {
               onClear={handleClear}
               onSortChange={handleSortChange}
             />
+
+            {tagsParam && (
+              <div className="mb-4 flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-2 rounded-full bg-indigo-50 py-1.5 pl-3.5 pr-1.5 text-sm font-semibold text-indigo-700 ring-1 ring-indigo-100">
+                  Category: {tagsParam}
+                  <button
+                    type="button"
+                    onClick={handleClearTags}
+                    aria-label="Clear category filter"
+                    className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-full text-indigo-500 transition-colors hover:bg-indigo-100 hover:text-indigo-700"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </span>
+              </div>
+            )}
 
             {/*products*/}
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 xl:grid-cols-5">
