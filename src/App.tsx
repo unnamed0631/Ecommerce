@@ -7,6 +7,7 @@ import ScrollToTop from "@/components/ScrollToTop";
 import { ProductsProvider } from "@/context/ProductsContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import DemoBanner from "@/components/DemoBanner";
 
 const Home = lazy(() => import("@/pages/HomePage"));
 const Products = lazy(() => import("@/pages/Products"));
@@ -33,6 +34,7 @@ const RouteFallback = () => (
 const App = () => {
   return (
     <BrowserRouter>
+      <DemoBanner />
       <ScrollToTop>
         <Provider store={store}>
           <ProductsProvider>

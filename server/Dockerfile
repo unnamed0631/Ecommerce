@@ -3,8 +3,8 @@ FROM oven/bun:1 AS builder
 
 WORKDIR /app
 
-COPY package.json ./
-RUN bun install --production
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile --production
 
 # ── Stage 2: Production ─────────────────────────────
 FROM oven/bun:1-slim AS production

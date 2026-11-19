@@ -68,13 +68,13 @@ app.post("/login", authRateLimiter, async (c) => {
     const user = await User.findOne({ email: parsed.data.email.toLowerCase() });
 
     if (!user) {
-      return c.json({ message: "user not found" }, 404);
+      return c.json({ message: "Invalid email or password" }, 401);
     }
 
     const passwordMatches = await compare(parsed.data.password, user.password);
 
     if (!passwordMatches) {
-      return c.json({ message: "password does not match" }, 401);
+      return c.json({ message: "Invalid email or password" }, 401);
     }
 
     const tokenUser: TokenUser = {

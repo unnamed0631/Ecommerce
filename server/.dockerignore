@@ -3,7 +3,6 @@ node_modules
 Dockerfile
 README.md
 LICENSE
-bun.lock
 bun.lockb
 *.log
 .DS_Store

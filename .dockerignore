@@ -12,7 +12,6 @@ server/Dockerfile
 docker-compose.yml
 README.md
 LICENSE
-bun.lock
 bun.lockb
 *.log
 .DS_Store

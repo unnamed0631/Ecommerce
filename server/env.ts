@@ -1,9 +1,16 @@
 import { z } from "zod";
 
+const secretSchema = z
+  .string()
+  .min(32, "must be at least 32 characters")
+  .refine((value) => value !== "change_me" && value !== "change_me_too", {
+    message: "must not be a placeholder value",
+  });
+
 const envSchema = z.object({
   MONGO_URI: z.string().min(1),
-  SECRET_ACCESS_TOKEN: z.string().min(1),
-  SECRET_REFRESH_TOKEN: z.string().min(1),
+  SECRET_ACCESS_TOKEN: secretSchema,
+  SECRET_REFRESH_TOKEN: secretSchema,
   PAYPAL_CLIENT_ID: z.string().min(1),
   PAYPAL_CLIENT_SECRET: z.string().min(1),
   PORT: z.coerce.number().int().positive().optional(),

@@ -1,5 +1,7 @@
 # AniMerch
 
+[![CI](https://github.com/unnamed0631/Ecommerce/actions/workflows/ci.yml/badge.svg)](https://github.com/unnamed0631/Ecommerce/actions/workflows/ci.yml)
+
 A full-stack ecommerce demo: React 19 frontend, Bun + Hono + Mongoose, Redis, VitePlus.
 PayPal checkout with idempotent orders, and an admin dashboard.
 
@@ -28,6 +30,15 @@ cd server && bun run dev   # API on PORT (default 8888)
 
 MongoDB is required. Redis is optional (the API falls back to no cache).
 Set `PAYPAL_MOCK=true` to run checkout without PayPal credentials.
+
+## Demo mode
+
+The frontend Docker image defaults to `VITE_DEMO_MODE=true`, which shows a dismissible
+banner: “Demo store — checkout is mocked; no real payment is taken.” Override it at build
+time with `--build-arg VITE_DEMO_MODE=false` for a real deployment.
+
+The live deployment also runs the API with `PAYPAL_MOCK=true`, so checkout creates
+deterministic mock orders and never charges a card.
 
 First-time browser setup for the E2E suite:
 

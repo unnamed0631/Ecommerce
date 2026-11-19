@@ -1,4 +1,4 @@
-import { hash } from "bcryptjs";
+import { createHash, randomUUID } from "node:crypto";
 import type { Context, MiddlewareHandler } from "hono";
 import jwt from "jsonwebtoken";
 import { Types } from "mongoose";
@@ -8,6 +8,11 @@ import RefreshToken from "../models/refreshToken.ts";
 import type { AppEnv, AuthUser, TokenUser, UserRole } from "../types.ts";
 
 const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+export const REFRESH_TOKEN_GRACE_MS = 120 * 1000;
+
+export function hashRefreshToken(token: string): string {
+  return createHash("sha256").update(token).digest("hex");
+}
 
 const tokenPayloadSchema = z.object({
   id: z.string().min(1),
@@ -34,14 +39,14 @@ export function generateAccessToken(user: TokenUser): string {
 }
 
 export async function generateRefreshToken(user: TokenUser): Promise<string> {
-  const refreshToken = jwt.sign({ id: user.id, role: user.role }, getEnv().SECRET_REFRESH_TOKEN, {
-    expiresIn: "7d",
-  });
-
-  const tokenHash = await hash(refreshToken, 10);
+  const refreshToken = jwt.sign(
+    { id: user.id, role: user.role, jti: randomUUID() },
+    getEnv().SECRET_REFRESH_TOKEN,
+    { expiresIn: "7d" },
+  );
 
   await RefreshToken.create({
-    tokenHash,
+    tokenHash: hashRefreshToken(refreshToken),
     expiresAt: new Date(Date.now() + REFRESH_TOKEN_TTL_MS),
     userId: new Types.ObjectId(user.id),
   });

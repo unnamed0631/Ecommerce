@@ -3,13 +3,15 @@ FROM oven/bun:1 AS builder
 
 WORKDIR /app
 
-COPY package.json ./
-RUN bun install
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile
 
 COPY . .
 
 ARG VITE_BACK_END_API=/api
 ENV VITE_BACK_END_API=$VITE_BACK_END_API
+ARG VITE_DEMO_MODE=true
+ENV VITE_DEMO_MODE=$VITE_DEMO_MODE
 
 RUN bun run build
 

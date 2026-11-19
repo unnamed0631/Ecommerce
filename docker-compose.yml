@@ -7,6 +7,12 @@ services:
       - mongo-data:/data/db
     networks:
       - ecommerce-net
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   redis:
     image: redis:7-alpine
@@ -17,8 +23,15 @@ services:
       - redis-data:/data
     networks:
       - ecommerce-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   client:
+    image: ecommerce-client:latest
     build:
       context: .
       dockerfile: Dockerfile
@@ -26,12 +39,20 @@ services:
     ports:
       - "3003:80"
     depends_on:
-      - server
+      server:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - ecommerce-net
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   server:
+    image: ecommerce-server:latest
     build:
       context: ./server
       dockerfile: Dockerfile
@@ -41,11 +62,25 @@ services:
     env_file:
       - ./server/.env
     depends_on:
-      - mongo
-      - redis
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - ecommerce-net
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "bun",
+          "-e",
+          "fetch('http://127.0.0.1:8888/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
 volumes:
   mongo-data:

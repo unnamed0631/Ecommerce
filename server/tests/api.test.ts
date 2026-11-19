@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, mock, test } from "bun:test";
+import { createHash } from "node:crypto";
 import { hashSync } from "bcryptjs";
 import type { Hono } from "hono";
 import { Types } from "mongoose";
@@ -7,8 +8,9 @@ import { resetPayPalTokenCacheForTests } from "../services/paypal.ts";
 import type { AppEnv } from "../types.ts";
 
 Bun.env.MONGO_URI = "mongodb://localhost:27017/ecommerce-test";
-Bun.env.SECRET_ACCESS_TOKEN = "test_access_token";
-Bun.env.SECRET_REFRESH_TOKEN = "test_refresh_token";
+Bun.env.SECRET_ACCESS_TOKEN = "test_access_token_0123456789abcdef0123456789abcdef";
+Bun.env.SECRET_REFRESH_TOKEN = "test_refresh_token_0123456789abcdef0123456789abcdef";
+Bun.env.TRUST_PROXY = "false";
 Bun.env.PAYPAL_CLIENT_ID = "test_client_id";
 Bun.env.PAYPAL_CLIENT_SECRET = "test_client_secret";
 Bun.env.CORS_ALLOWED_ORIGINS = "http://localhost:3000";
@@ -71,6 +73,9 @@ interface FakeRefreshToken {
   tokenHash: string;
   expiresAt: Date;
   userId: Types.ObjectId;
+  createdAt?: Date;
+  revokedAt?: Date | null;
+  replacedBy?: string | null;
 }
 
 interface FakeOrderItem {
@@ -676,6 +681,45 @@ const profileModel = {
   },
 };
 
+function matchesRefreshTokenFilter(
+  token: FakeRefreshToken,
+  filter: Record<string, unknown>,
+): boolean {
+  const id = idString(filter._id);
+
+  if (id !== undefined && token._id.toString() !== id) return false;
+
+  const tokenHash = filter.tokenHash;
+
+  if (typeof tokenHash === "string" && token.tokenHash !== tokenHash) return false;
+
+  const userId = idString(filter.userId);
+
+  if (userId !== undefined && token.userId.toString() !== userId) return false;
+
+  if (Object.hasOwn(filter, "revokedAt")) {
+    const expected = filter.revokedAt;
+    const current = token.revokedAt ?? null;
+
+    if (expected === null && current !== null) return false;
+    if (expected instanceof Date && (!current || current.getTime() !== expected.getTime())) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function applyRefreshTokenUpdate(token: FakeRefreshToken, update: unknown): void {
+  const parsedUpdate = isRecord(update) ? update : {};
+  const set = isRecord(parsedUpdate.$set) ? parsedUpdate.$set : {};
+
+  if (set.revokedAt instanceof Date) token.revokedAt = set.revokedAt;
+  if (set.revokedAt === null) token.revokedAt = null;
+  if (typeof set.replacedBy === "string") token.replacedBy = set.replacedBy;
+  if (set.replacedBy === null) token.replacedBy = null;
+}
+
 const refreshTokenModel = {
   async create(data: unknown): Promise<FakeRefreshToken> {
     const parsed = asRecord(data);
@@ -688,25 +732,67 @@ const refreshTokenModel = {
       tokenHash,
       expiresAt: parsed.expiresAt instanceof Date ? parsed.expiresAt : new Date(),
       userId: objectIdFrom(parsed.userId),
+      createdAt: new Date(),
+      revokedAt: parsed.revokedAt instanceof Date ? parsed.revokedAt : null,
+      replacedBy: typeof parsed.replacedBy === "string" ? parsed.replacedBy : null,
     };
 
     refreshTokenStore.push(token);
     return token;
   },
+  async findOne(filter: unknown): Promise<FakeRefreshToken | null> {
+    const parsedFilter = isRecord(filter) ? filter : {};
+    return (
+      refreshTokenStore.find((token) => matchesRefreshTokenFilter(token, parsedFilter)) ?? null
+    );
+  },
   find(filter: unknown): FakeQuery<FakeRefreshToken> {
     const parsedFilter = isRecord(filter) ? filter : {};
-    const userId = idString(parsedFilter.userId);
-    const matches = refreshTokenStore.filter((token) => token.userId.toString() === userId);
+    const matches = refreshTokenStore.filter((token) =>
+      matchesRefreshTokenFilter(token, parsedFilter),
+    );
     return new FakeQuery(matches);
+  },
+  async updateOne(
+    filter: unknown,
+    update: unknown,
+  ): Promise<{ matchedCount: number; modifiedCount: number }> {
+    const parsedFilter = isRecord(filter) ? filter : {};
+    const token = refreshTokenStore.find((candidate) =>
+      matchesRefreshTokenFilter(candidate, parsedFilter),
+    );
+
+    if (!token) return { matchedCount: 0, modifiedCount: 0 };
+
+    applyRefreshTokenUpdate(token, update);
+    return { matchedCount: 1, modifiedCount: 1 };
+  },
+  async updateMany(
+    filter: unknown,
+    update: unknown,
+  ): Promise<{ matchedCount: number; modifiedCount: number }> {
+    const parsedFilter = isRecord(filter) ? filter : {};
+    const matches = refreshTokenStore.filter((token) =>
+      matchesRefreshTokenFilter(token, parsedFilter),
+    );
+
+    for (const token of matches) {
+      applyRefreshTokenUpdate(token, update);
+    }
+
+    return { matchedCount: matches.length, modifiedCount: matches.length };
   },
   async deleteMany(filter: unknown): Promise<{ deletedCount: number }> {
     const parsedFilter = isRecord(filter) ? filter : {};
-    const userId = idString(parsedFilter.userId);
-    const remaining = refreshTokenStore.filter((token) => token.userId.toString() !== userId);
-    const deletedCount = refreshTokenStore.length - remaining.length;
+    const matches = refreshTokenStore.filter((token) =>
+      matchesRefreshTokenFilter(token, parsedFilter),
+    );
+    const deletedCount = matches.length;
 
-    refreshTokenStore.length = 0;
-    refreshTokenStore.push(...remaining);
+    for (const token of matches) {
+      const index = refreshTokenStore.indexOf(token);
+      if (index >= 0) refreshTokenStore.splice(index, 1);
+    }
 
     return { deletedCount };
   },
@@ -1075,6 +1161,34 @@ async function createTestOrder(
   return { order, paypalOrderId };
 }
 
+function sha256(value: string): string {
+  return createHash("sha256").update(value).digest("hex");
+}
+
+async function registerTestUser(email: string): Promise<{
+  userId: string;
+  accessToken: string;
+  refreshToken: string;
+}> {
+  const response = await jsonRequest("/auth/register", "POST", {
+    name: email.split("@")[0] ?? "Refresh Test",
+    email,
+    password: "password123",
+    confirmPassword: "password123",
+  });
+  const body = await readJsonObject(response);
+  const user = asRecord(body.user);
+  const userId = stringField(user, "id");
+  const accessToken = stringField(body, "accessToken");
+  const refreshToken = stringField(body, "refreshToken");
+
+  if (response.status !== 201 || !userId || !accessToken || !refreshToken) {
+    throw new Error(`Failed to register test user ${email}`);
+  }
+
+  return { userId, accessToken, refreshToken };
+}
+
 beforeAll(async () => {
   productStore.push(
     {
@@ -1223,6 +1337,150 @@ describe("Ecommerce API", () => {
     const user = asRecord(body.user);
     expect(stringField(user, "username")).toBe("Second User");
     expect(user.password).toBeUndefined();
+  });
+
+  test("login returns the same 401 for unknown email and wrong password", async () => {
+    const unknownEmail = await jsonRequest("/auth/login", "POST", {
+      email: "missing@example.com",
+      password: "password123",
+    });
+    const wrongPassword = await jsonRequest("/auth/login", "POST", {
+      email: "test@example.com",
+      password: "wrongpassword",
+    });
+    const unknownBody = await readJsonObject(unknownEmail);
+    const wrongBody = await readJsonObject(wrongPassword);
+
+    expect(unknownEmail.status).toBe(401);
+    expect(wrongPassword.status).toBe(401);
+    expect(stringField(unknownBody, "message")).toBe("Invalid email or password");
+    expect(wrongBody).toEqual(unknownBody);
+  });
+
+  test("refresh-token rotation returns a new pair and rejects old reuse after grace", async () => {
+    const { refreshToken: originalRefresh, userId } = await registerTestUser("rotate@example.com");
+    const rotation = await jsonRequest("/refresh-token", "PUT", {
+      refreshToken: originalRefresh,
+    });
+    const rotationBody = await readJsonObject(rotation);
+    const rotatedRefresh = stringField(rotationBody, "refreshToken");
+
+    expect(rotation.status).toBe(200);
+    expect(stringField(rotationBody, "accessToken")).toBeString();
+    expect(rotatedRefresh).toBeString();
+
+    if (!rotatedRefresh) throw new Error("Expected a rotated refresh token");
+
+    expect(rotatedRefresh).not.toBe(originalRefresh);
+
+    const oldRow = refreshTokenStore.find((token) => token.tokenHash === sha256(originalRefresh));
+
+    expect(oldRow).toBeDefined();
+    expect(oldRow?.revokedAt).toBeInstanceOf(Date);
+    expect(oldRow?.replacedBy).toBe(sha256(rotatedRefresh));
+
+    if (!oldRow) throw new Error("Expected the old refresh token row");
+
+    // Pretend the 120-second concurrent-tab grace window has elapsed.
+    oldRow.revokedAt = new Date(Date.now() - 121_000);
+
+    const reuse = await jsonRequest("/refresh-token", "PUT", {
+      refreshToken: originalRefresh,
+    });
+
+    expect(reuse.status).toBe(403);
+
+    const activeForUser = refreshTokenStore.filter(
+      (token) => token.userId.toString() === userId && !token.revokedAt,
+    );
+
+    expect(activeForUser).toHaveLength(0);
+  });
+
+  test("a duplicate refresh inside the grace window succeeds without revoking other sessions", async () => {
+    const { refreshToken: originalRefresh, userId } = await registerTestUser("grace@example.com");
+    const rotation = await jsonRequest("/refresh-token", "PUT", {
+      refreshToken: originalRefresh,
+    });
+    const rotationBody = await readJsonObject(rotation);
+    const rotatedRefresh = stringField(rotationBody, "refreshToken");
+
+    expect(rotation.status).toBe(200);
+
+    if (!rotatedRefresh) throw new Error("Expected a rotated refresh token");
+
+    const duplicate = await jsonRequest("/refresh-token", "PUT", {
+      refreshToken: originalRefresh,
+    });
+    const duplicateBody = await readJsonObject(duplicate);
+    const graceRefresh = stringField(duplicateBody, "refreshToken");
+
+    expect(duplicate.status).toBe(200);
+    expect(graceRefresh).toBeString();
+    expect(graceRefresh).not.toBe(originalRefresh);
+    expect(graceRefresh).not.toBe(rotatedRefresh);
+
+    const rotatedRow = refreshTokenStore.find(
+      (token) => token.tokenHash === sha256(rotatedRefresh),
+    );
+
+    expect(rotatedRow?.revokedAt ?? null).toBeNull();
+
+    const activeForUser = refreshTokenStore.filter(
+      (token) => token.userId.toString() === userId && !token.revokedAt,
+    );
+
+    expect(activeForUser).toHaveLength(2);
+  });
+
+  test("two independent device tokens both keep working when one rotates", async () => {
+    const { refreshToken: firstDeviceRefresh, userId } =
+      await registerTestUser("devices@example.com");
+    const login = await jsonRequest("/auth/login", "POST", {
+      email: "devices@example.com",
+      password: "password123",
+    });
+    const loginBody = await readJsonObject(login);
+    const secondDeviceRefresh = stringField(loginBody, "refreshToken");
+
+    expect(login.status).toBe(200);
+
+    if (!secondDeviceRefresh) throw new Error("Expected a second device refresh token");
+
+    const firstRotation = await jsonRequest("/refresh-token", "PUT", {
+      refreshToken: firstDeviceRefresh,
+    });
+
+    expect(firstRotation.status).toBe(200);
+
+    const secondRotation = await jsonRequest("/refresh-token", "PUT", {
+      refreshToken: secondDeviceRefresh,
+    });
+    const secondRotationBody = await readJsonObject(secondRotation);
+
+    expect(secondRotation.status).toBe(200);
+    expect(stringField(secondRotationBody, "accessToken")).toBeString();
+    expect(stringField(secondRotationBody, "refreshToken")).toBeString();
+
+    const activeForUser = refreshTokenStore.filter(
+      (token) => token.userId.toString() === userId && !token.revokedAt,
+    );
+
+    expect(activeForUser).toHaveLength(2);
+  });
+
+  test("logout invalidates the refresh token", async () => {
+    const { accessToken, refreshToken } = await registerTestUser("logout@example.com");
+    const logout = await jsonRequest("/logout", "POST", {
+      accessToken,
+      refreshToken,
+    });
+
+    expect(logout.status).toBe(200);
+
+    const refresh = await jsonRequest("/refresh-token", "PUT", { refreshToken });
+
+    expect(refresh.status).toBe(403);
   });
 
   test("GET /products/random, /products/:page and /products/product/:id", async () => {

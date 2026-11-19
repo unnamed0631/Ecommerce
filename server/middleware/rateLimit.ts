@@ -12,18 +12,24 @@ interface LimiterConfig {
   windowMs?: number;
 }
 
+function headerValue(value: string | undefined): string | undefined {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : undefined;
+}
+
 function clientKey(c: Context<AppEnv>): string {
   if (getEnv().TRUST_PROXY) {
-    const forwarded = c.req.header("x-forwarded-for");
+    const forwarded = headerValue(c.req.header("x-forwarded-for"));
     const firstForwarded = forwarded?.split(",")[0]?.trim();
 
     if (firstForwarded) return firstForwarded;
 
-    return c.req.header("x-real-ip") ?? "unknown";
+    return headerValue(c.req.header("x-real-ip")) ?? "unknown";
   }
 
   try {
-    return getConnInfo(c).remote.address ?? "unknown";
+    const address = getConnInfo(c).remote.address?.trim();
+    return address || "unknown";
   } catch {
     // `app.request()` and similar test/embedded transports have no Bun server.
     return "unknown";
