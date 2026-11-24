@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import type { Product } from "@/types";
-import { imageAt, imageSrcSet, type ImageVariant } from "@/lib/images";
+import type { ImageVariant } from "@/lib/images";
 import StarVotes from "@/components/ui/StarVotes";
+import ProductImage from "@/components/ui/ProductImage";
 
 export interface ProductCardProps {
   product: Product;
@@ -23,17 +24,17 @@ const ProductCard = ({ product, imageSize }: ProductCardProps) => {
   return (
     <div className="group flex h-full flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
       <Link to={`/product/${_id}`} state={{ productData: product }} className="block">
-        <div className="relative aspect-square overflow-hidden bg-gray-50">
-          <img
-            src={imageAt(image, imageSize ?? "256.256")}
-            srcSet={imageSrcSet(image, CARD_IMAGE_SOURCES) || undefined}
+        <div className="relative bg-gray-50">
+          <ProductImage
+            src={image}
+            size={imageSize ?? "256.256"}
+            variants={CARD_IMAGE_SOURCES}
             sizes="(min-width: 1024px) 20vw, 50vw"
             alt={title}
             width={400}
             height={400}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-            loading="lazy"
-            decoding="async"
+            className="aspect-square w-full"
+            imgClassName="group-hover:scale-105"
           />
           <div className="absolute left-2 top-2 flex flex-col items-start gap-1">
             {product.isNewProduct && (

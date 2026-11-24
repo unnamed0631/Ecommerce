@@ -2,6 +2,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { Link } from "react-router-dom";
 import { RootState } from "@/redux/store";
 import { INCREASE_QTY, DECREASE_QTY, DELETE_ITEM } from "@/redux/action";
+import ProductImage from "@/components/ui/ProductImage";
 
 const Cart = () => {
   const cart = useSelector((state: RootState) => state.handleCart);
@@ -32,11 +33,12 @@ const Cart = () => {
           <div className="space-y-8">
             {cart.map((item) => (
               <div key={item._id} className="bg-white rounded-lg shadow p-6 flex items-center">
-                <img
+                <ProductImage
                   src={item.image}
+                  size="256.256"
                   alt={item.title}
-                  loading="lazy"
-                  className="w-24 h-24 object-cover rounded"
+                  className="h-24 w-24 shrink-0 rounded"
+                  compactFallback
                 />
                 <div className="ml-6 flex-1">
                   <h2 className="text-xl font-semibold text-gray-900">{item.title}</h2>

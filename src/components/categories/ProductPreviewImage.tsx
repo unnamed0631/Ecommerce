@@ -1,6 +1,5 @@
-import { useState } from "react";
-import { ImageOff } from "lucide-react";
-import { imageAt, imageSrcSet, type ImageVariant } from "@/lib/images";
+import type { ImageVariant } from "@/lib/images";
+import ProductImage from "@/components/ui/ProductImage";
 
 const PREVIEW_SOURCES: readonly ImageVariant[] = [
   { width: 400, size: "400.400" },
@@ -16,39 +15,27 @@ interface ProductPreviewImageProps {
   loading?: "eager" | "lazy";
 }
 
-/** Responsive catalog image with a graceful fallback when the CDN fails. */
+/**
+ * Responsive catalog image for the category artwork: placeholder while it
+ * loads, fallback when the CDN fails. Sizing comes from `className`, which
+ * styles the wrapper, so callers can position it like they used to.
+ */
 const ProductPreviewImage = ({
   src,
   alt,
   className = "",
   sizes,
   loading = "lazy",
-}: ProductPreviewImageProps) => {
-  const [failed, setFailed] = useState(false);
-
-  if (failed) {
-    return (
-      <div
-        aria-hidden="true"
-        className={`${className} flex items-center justify-center bg-gray-100 text-gray-400`}
-      >
-        <ImageOff className="h-8 w-8" />
-      </div>
-    );
-  }
-
-  return (
-    <img
-      src={imageAt(src, "600.600")}
-      srcSet={imageSrcSet(src, PREVIEW_SOURCES) || undefined}
-      sizes={sizes}
-      alt={alt}
-      loading={loading}
-      decoding="async"
-      onError={() => setFailed(true)}
-      className={className}
-    />
-  );
-};
+}: ProductPreviewImageProps) => (
+  <ProductImage
+    src={src}
+    size="600.600"
+    variants={PREVIEW_SOURCES}
+    sizes={sizes}
+    alt={alt}
+    loading={loading}
+    className={className}
+  />
+);
 
 export default ProductPreviewImage;

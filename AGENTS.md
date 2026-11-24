@@ -221,6 +221,9 @@ is a working alias of `/products/:page` (query `page` instead of the path segmen
 - [x] Responsive mobile home and catalog layouts with 2-column grids and reveal animations.
 - [x] Home rails for featured, top-rated and newest products; catalog sort control (sort is
       preserved across search, filters and pagination).
+- [x] One `ProductImage` component everywhere a catalog image renders (cards, gallery
+      thumbnails, related, cart, checkout, search, category art): pulsing placeholder until
+      the image decodes, fade-in, and an explicit fallback when the CDN fails.
 
 ### Next
 

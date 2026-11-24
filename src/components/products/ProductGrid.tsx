@@ -1,9 +1,9 @@
-import { memo, useEffect, useRef, useState } from "react";
+import { memo } from "react";
 import { Link } from "react-router-dom";
 import { StarVotes } from "@/components";
 import { motion } from "motion/react";
-import { ImageOff } from "lucide-react";
-import { imageAt, imageSrcSet, type ImageVariant } from "@/lib/images";
+import type { ImageVariant } from "@/lib/images";
+import ProductImage from "@/components/ui/ProductImage";
 import type { Product as ProductType } from "@/types";
 import FlyToCart from "../ui/flyToCart";
 
@@ -17,19 +17,6 @@ const GRID_IMAGE_SIZES =
   "(min-width: 1280px) 18vw, (min-width: 1024px) 22vw, (min-width: 864px) 30vw, 45vw";
 
 const ProductGridCard = memo(function ProductGridCard({ product }: { product: ProductType }) {
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const [imageFailed, setImageFailed] = useState(false);
-  const imgRef = useRef<HTMLImageElement>(null);
-
-  // Cached images may finish before React attaches the load listener.
-  useEffect(() => {
-    const image = imgRef.current;
-
-    if (image?.complete && image.naturalWidth > 0) {
-      setImageLoaded(true);
-    }
-  }, []);
-
   const discount = Number(product.discount) || 0;
   const effectivePrice =
     discount > 0
@@ -46,45 +33,18 @@ const ProductGridCard = memo(function ProductGridCard({ product }: { product: Pr
       className="group flex h-full flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-shadow hover:shadow-lg"
     >
       <div className="relative overflow-hidden bg-gray-50">
-        <Link
-          to={`/product/${product._id}`}
-          state={{ productData: product }}
-          className="relative block aspect-square w-full overflow-hidden bg-gray-100"
-        >
-          {!imageFailed && (
-            <div
-              aria-hidden="true"
-              className={`pointer-events-none absolute inset-0 animate-pulse bg-gray-200 transition-opacity duration-300 ${
-                imageLoaded ? "opacity-0" : "opacity-100"
-              }`}
-            />
-          )}
-
-          <img
-            src={imageAt(product.image, "400.400")}
-            srcSet={imageSrcSet(product.image, GRID_IMAGE_SOURCES) || undefined}
+        <Link to={`/product/${product._id}`} state={{ productData: product }} className="block">
+          <ProductImage
+            src={product.image}
+            size="400.400"
+            variants={GRID_IMAGE_SOURCES}
             sizes={GRID_IMAGE_SIZES}
             alt={product.title}
             width={400}
             height={400}
-            ref={imgRef}
-            loading="lazy"
-            decoding="async"
-            onLoad={() => setImageLoaded(true)}
-            onError={() => setImageFailed(true)}
-            className={`relative h-full w-full object-cover transition duration-400 group-hover:scale-105 ${
-              imageLoaded && !imageFailed ? "opacity-100" : "opacity-0"
-            }`}
+            className="aspect-square w-full"
+            imgClassName="group-hover:scale-105"
           />
-
-          {imageFailed && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-gray-100 px-3 text-center text-gray-400">
-              <ImageOff className="h-7 w-7" />
-              <span className="text-[10px] font-semibold uppercase tracking-wide">
-                Image unavailable
-              </span>
-            </div>
-          )}
         </Link>
 
         <div className="pointer-events-none absolute inset-x-2 top-2 flex items-start justify-between gap-2">

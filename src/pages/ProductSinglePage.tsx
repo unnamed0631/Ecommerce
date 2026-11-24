@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useContext } from "react";
 import { useParams, Link, useLocation } from "react-router-dom";
-import { getFullImage, imageAt, imageSrcSet, type ImageVariant } from "@/lib/images";
+import { getFullImage, type ImageVariant } from "@/lib/images";
 import { sanitizeProductHtml } from "@/lib/sanitize";
 import { Check, ChevronDown, ChevronRight, ChevronUp, Heart, X } from "lucide-react";
 import { EasyZoomOnHover } from "easy-magnify";
@@ -14,6 +14,7 @@ import { addCart } from "@/redux/action";
 import { animate } from "motion/react";
 import { StarVotes } from "@/components";
 import { ProductCardSkeleton, ProductImageSkeleton } from "@/components/ui/skeletons";
+import ProductImage from "@/components/ui/ProductImage";
 import { ProductsContext } from "@/context/ProductsContext";
 import type { Product } from "@/types";
 
@@ -299,16 +300,16 @@ const ProductSinglePage = () => {
                           mainImage === src ? "border-blue-500" : "border-transparent"
                         }`}
                       >
-                        <img
-                          src={imageAt(src, "64.64")}
-                          srcSet={imageSrcSet(src, THUMBNAIL_SOURCES) || undefined}
+                        <ProductImage
+                          src={src}
+                          size="64.64"
+                          variants={THUMBNAIL_SOURCES}
                           sizes="64px"
                           alt=""
                           width={64}
                           height={64}
-                          loading="lazy"
-                          decoding="async"
-                          className="h-full w-full object-cover"
+                          className="h-full w-full"
+                          compactFallback
                         />
                       </button>
                     </SwiperSlide>
@@ -464,16 +465,15 @@ const ProductSinglePage = () => {
               >
                 <Link to={`/product/${product._id}`} state={{ productData: product }}>
                   <div className="relative">
-                    <img
-                      src={imageAt(product.image, "256.256")}
-                      srcSet={imageSrcSet(product.image, RELATED_IMAGE_SOURCES) || undefined}
+                    <ProductImage
+                      src={product.image}
+                      size="256.256"
+                      variants={RELATED_IMAGE_SOURCES}
                       sizes={RELATED_IMAGE_SIZES}
                       alt={product.title}
                       width={400}
                       height={400}
-                      loading="lazy"
-                      decoding="async"
-                      className="w-full h-48 object-cover"
+                      className="h-48 w-full"
                     />
                   </div>
                   <div className="p-4">

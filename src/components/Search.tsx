@@ -14,6 +14,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Search as SearchIcon, X } from "lucide-react";
 import { ProductsContext } from "@/context/ProductsContext";
 import type { Product } from "@/types";
+import ProductImage from "@/components/ui/ProductImage";
 
 const Search = () => {
   const navigate = useNavigate();
@@ -179,10 +180,12 @@ const Search = () => {
                                 className="w-full flex items-center gap-4 p-3 hover:bg-gray-50 transition-colors text-left
                                                                 cursor-pointer"
                               >
-                                <img
+                                <ProductImage
                                   src={product.image}
+                                  size="128.128"
                                   alt={product.title}
-                                  className="w-12 h-12 object-cover rounded shrink-0"
+                                  className="h-12 w-12 shrink-0 rounded"
+                                  compactFallback
                                 />
                                 <div className="min-w-0 flex-1">
                                   <p className="text-sm font-medium text-gray-900 truncate">

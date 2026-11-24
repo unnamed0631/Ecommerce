@@ -5,6 +5,7 @@ import { z } from "zod";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import Paypal from "@/components/Paypal";
+import ProductImage from "@/components/ui/ProductImage";
 import type { RootState } from "@/redux/store";
 import type { CartItem, ShippingInput } from "@/types";
 
@@ -255,10 +256,12 @@ const Checkout = () => {
               <div className="space-y-4">
                 {cart.map((item) => (
                   <div key={item._id} className="flex items-center">
-                    <img
+                    <ProductImage
                       src={item.image}
+                      size="128.128"
                       alt={item.title}
-                      className="h-16 w-16 rounded object-cover"
+                      className="h-16 w-16 shrink-0 rounded"
+                      compactFallback
                     />
                     <div className="ml-4 flex-1">
                       <h3 className="text-sm font-medium">{item.title}</h3>
